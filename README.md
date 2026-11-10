@@ -1,6 +1,6 @@
 # Google Maps Automotive for MicroG-RE on BYD cars
 
-Google Maps Automotive on a BYD DiLink 3 head unit (Android 10) with [MicroG-RE 7.3.0](https://github.com/MorpheApp/MicroG-RE/releases/tag/7.3.0). The patched app, **Maps**, installs alongside phone Google Maps. This repository publishes `.mpp` bundles only; bring your own original APK.
+Google Maps Automotive on a BYD DiLink 3 head unit (Android 10), or an Android 9 head unit, with [MicroG-RE 7.3.0](https://github.com/MorpheApp/MicroG-RE/releases/tag/7.3.0). The patched app, **Maps**, installs alongside phone Google Maps. This repository publishes `.mpp` bundles only; bring your own original APK.
 
 [Test Files](https://tryy.cc/byd), PIN: 344993
 
@@ -36,6 +36,7 @@ UI density, Driver side, Color scheme, BYD battery, Send to car and Updates are 
 Tested on a BYD Dolphin (DiLink 3.0, Android 10) with MicroG-RE 7.3.0.
 
 - Other BYD models, DiLink 5 and Android 11 or newer are untested.
+- Android 9 (API 28): the patch guards the Android 10 calls of Maps and backports `WindowInsets.Builder`; it starts and shows the Maps UI on an Android 9 emulator, untested on a head unit.
 - On other BYD models, BYD battery starts off.
 - Plug-in hybrids are not supported.
 
@@ -43,7 +44,7 @@ Tested on a BYD Dolphin (DiLink 3.0, Android 10) with MicroG-RE 7.3.0.
 
 - [Morphe Desktop](https://github.com/MorpheApp/morphe-desktop) 2.1.0 or newer, with Java 21
 - The original **Google Maps (Android Automotive) 26.10.120003.E** APK (version code `1068833413`), for example from APKMirror. Other versions are untested.
-- An ARM64 BYD head unit with Android 10 or newer, 4 KiB memory pages and ADB access for one command during install
+- An ARM64 BYD head unit with Android 9 or newer, 4 KiB memory pages and ADB access for one command during install
 
 ## Install
 
@@ -101,7 +102,7 @@ Eligible versions: Any version.
 | BYD battery (EV) | Feeds the BYD battery into Maps' EV routing (battery on arrival, chargers). On by default on the tested BYD Dolphin, off with an "untested" notice on other BYD models; a Settings row turns it on or off and sets the battery to arrive with at charging stops and at the destination. |  |
 | BYD location flicker fix | Holds back BYD's brief location off/on flips for up to 3 s, so Maps does not flash its location lockout. |  |
 | BYD navigation volume | Plays Maps' spoken directions on BYD's navigation volume instead of the media volume. |  |
-| Google Maps Automotive for MicroG-RE | Runs Google Maps for Android Automotive on Android 10 with MicroG-RE 7.3.0, named "Maps" unless the App name option says otherwise. Adds UI density, driver side and color scheme settings, a problem report, an update check and a safe mode. | • App name |
+| Google Maps Automotive for MicroG-RE | Runs Google Maps for Android Automotive on Android 9 or newer with MicroG-RE 7.3.0, named "Maps" unless the App name option says otherwise. Adds UI density, driver side and color scheme settings, a problem report, an update check and a safe mode. | • App name |
 | Send to car | Lets phone Maps send a trip to the head unit through MicroG-RE (push routes, the notification service identity and maps.app.goo.gl links). Adds a Send to car row in Settings: a status check and the car's name in phone Maps (default "Vehicle 1"). |  |
 
 <!-- PATCHES_END -->
