@@ -160,7 +160,7 @@ internal fun memberKey(instruction: Instruction): String? =
         else -> null
     }
 
-private fun isMapsCode(type: String) = OUTLINE_CLASS_MARKER !in type && !type.startsWith(EXTENSION_PACKAGE)
+internal fun isMapsCode(type: String) = OUTLINE_CLASS_MARKER !in type && !type.startsWith(EXTENSION_PACKAGE)
 
 internal fun isMapsOutline(type: String) = OUTLINE_CLASS_MARKER in type && !type.startsWith(EXTENSION_PACKAGE)
 
@@ -183,7 +183,7 @@ internal fun BytecodePatchContext.requireApiCompatMethods(references: Collection
 }
 
 // [reference] invoked statically with the registers of [call].
-private fun staticCall(call: Instruction, reference: MethodReference): BuilderInstruction = when (call) {
+internal fun staticCall(call: Instruction, reference: MethodReference): BuilderInstruction = when (call) {
     is FiveRegisterInstruction -> BuilderInstruction35c(
         Opcode.INVOKE_STATIC, call.registerCount, call.registerC, call.registerD,
         call.registerE, call.registerF, call.registerG, reference,

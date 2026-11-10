@@ -13,3 +13,8 @@
 }
 -dontwarn java.lang.reflect.AnnotatedType
 -dontwarn javax.lang.model.element.Modifier
+
+# Android 9 backport of a framework class, loaded only where the framework lacks it.
+-keep class android.view.WindowInsets$Builder {
+    *;
+}

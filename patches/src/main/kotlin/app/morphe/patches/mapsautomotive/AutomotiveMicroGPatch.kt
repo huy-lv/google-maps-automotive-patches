@@ -186,6 +186,7 @@ val automotiveMicroGPatch = bytecodePatch(
         injectWindowRefresh()
         redirectApiModelOutlines()
         guardApi29Outlines()
+        replaceJobInfoBuildCalls()
         replaceWindowBoundsCalls()
         replaceInstallSourceCalls()
         replaceCloseGuardCalls()

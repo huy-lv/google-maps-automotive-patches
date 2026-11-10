@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.app.Notification;
 import android.app.Service;
+import android.app.job.JobInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -106,6 +107,29 @@ public final class Api29Compat {
     public static Insets getTappableElementInsets(WindowInsets insets) {
         if (atLeastQ()) return insets.getTappableElementInsets();
         return getSystemWindowInsets(insets);
+    }
+
+    /**
+     * new WindowInsets.Builder().build(), looked up by name: javac resolves the name to either the
+     * framework class or the extension backport, depending on the compile order.
+     */
+    public static WindowInsets buildEmptyWindowInsets() {
+        try {
+            Class<?> builder = Class.forName("android.view.WindowInsets$Builder");
+            return (WindowInsets) builder.getMethod("build").invoke(builder.getConstructor().newInstance());
+        } catch (Throwable error) {
+            throw new IllegalStateException("No WindowInsets.Builder", error);
+        }
+    }
+
+    public static JobInfo buildJobInfo(JobInfo.Builder builder) {
+        try {
+            return builder.build();
+        } catch (IllegalArgumentException error) {
+            if (atLeastQ()) throw error;
+            // "You're trying to build a job with no constraints": run it now, as Android 10 does.
+            return builder.setOverrideDeadline(0).build();
+        }
     }
 
     /** Insets.max is public since API 29; the hidden Android 9 Insets lacks it. */

@@ -323,7 +323,7 @@ public final class ApiCompat {
     public static WindowInsets getConsumedWindowInsets() {
         if (atLeastR()) return WindowInsets.CONSUMED;
         if (consumedWindowInsets == null) {
-            consumedWindowInsets = new android.view.WindowInsets$Builder().build()
+            consumedWindowInsets = Api29Compat.buildEmptyWindowInsets()
                     .consumeDisplayCutout().consumeStableInsets().consumeSystemWindowInsets();
         }
         return consumedWindowInsets;

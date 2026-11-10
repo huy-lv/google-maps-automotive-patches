@@ -2,6 +2,7 @@ package app.morphe.patches.mapsautomotive
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.patch.BytecodePatchContext
+import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
 import com.android.tools.smali.dexlib2.AccessFlags
@@ -13,6 +14,7 @@ import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference
 import java.util.logging.Logger
 
 // Android 9 (API 28) support. R8's minSdk 30 also dropped the SDK_INT >= 29 checks, so Maps calls
@@ -304,4 +306,37 @@ internal fun BytecodePatchContext.guardApi29Outlines() {
         mutableClass.methods.add(guarded)
     }
     api29Logger.info("Guarded ${targets.size} API 29 outline methods (${targets.map { it.key }.distinct().size} members)")
+}
+
+private const val JOB_INFO_BUILD_MEMBER = "Landroid/app/job/JobInfo\$Builder;->build()Landroid/app/job/JobInfo;"
+private val buildJobInfoReference = ImmutableMethodReference(
+    API29_COMPAT_CLASS, "buildJobInfo", listOf("Landroid/app/job/JobInfo\$Builder;"), "Landroid/app/job/JobInfo;",
+)
+
+// Android 9 refuses a job without constraints, which WorkManager (built for API 30, so without
+// its Android 9 path) schedules for work to run now. Every JobInfo.Builder.build() of Maps goes
+// through Api29Compat, which adds a zero deadline to such a job on Android 9.
+internal fun BytecodePatchContext.replaceJobInfoBuildCalls() {
+    requireApiCompatMethods(listOf(buildJobInfoReference))
+    val sites = mutableListOf<Pair<Method, Int>>()
+    classDefForEach { classDef ->
+        if (!isMapsCode(classDef.type)) return@classDefForEach
+        classDef.methods.forEach { method ->
+            method.implementation?.instructions?.forEachIndexed { index, instruction ->
+                if ((instruction.opcode == Opcode.INVOKE_VIRTUAL || instruction.opcode == Opcode.INVOKE_VIRTUAL_RANGE) &&
+                    (instruction as ReferenceInstruction).reference.toString() == JOB_INFO_BUILD_MEMBER
+                ) {
+                    sites += method to index
+                }
+            }
+        }
+    }
+    if (sites.isEmpty()) throw PatchException("Failed to find JobInfo.Builder.build() calls")
+    sites.groupBy({ it.first }, { it.second }).forEach { (original, indices) ->
+        val method = mutableMethodOf(original)
+        indices.forEach { index ->
+            method.replaceInstruction(index, staticCall(method.implementation!!.instructions[index], buildJobInfoReference))
+        }
+    }
+    api29Logger.info("Redirected ${sites.size} JobInfo.Builder.build() calls")
 }
