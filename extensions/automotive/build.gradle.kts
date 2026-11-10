@@ -45,7 +45,7 @@ configure<ApplicationExtension> {
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 29
+        minSdk = 28
         buildConfigField("String", "MAPS_CAR_REPORT_URL", "\"$reportUrl\"")
         buildConfigField("String", "MAPS_CAR_REPORT_KEY", "\"$reportKey\"")
         buildConfigField("String", "MAPS_CAR_PROJECT_URL", "\"$projectUrl\"")

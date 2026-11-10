@@ -275,7 +275,7 @@ public final class ApiCompat {
     private static Insets insetsForTypes(WindowInsets insets, int typeMask, boolean ignoreVisibility) {
         Insets result = Insets.NONE;
         for (int type = STATUS_BARS; type <= DISPLAY_CUTOUT; type <<= 1) {
-            if ((typeMask & type) != 0) result = Insets.max(result, insetsForType(insets, type, ignoreVisibility));
+            if ((typeMask & type) != 0) result = Api29Compat.max(result, insetsForType(insets, type, ignoreVisibility));
         }
         return result;
     }
@@ -284,8 +284,8 @@ public final class ApiCompat {
     // this WindowInsets: insets that androidx or AppCompat rebuild can lack stable insets, so they
     // count only when present (a missing stable bottom gave navigation bars 0 and IME 90).
     private static Insets insetsForType(WindowInsets insets, int type, boolean ignoreVisibility) {
-        Insets system = insets.getSystemWindowInsets();
-        Insets stable = insets.hasStableInsets() ? insets.getStableInsets() : null;
+        Insets system = Api29Compat.getSystemWindowInsets(insets);
+        Insets stable = insets.hasStableInsets() ? Api29Compat.getStableInsets(insets) : null;
         switch (type) {
             case STATUS_BARS: {
                 int top = ignoreVisibility && stable != null ? Math.max(stable.top, system.top) : system.top;
@@ -303,11 +303,11 @@ public final class ApiCompat {
                 return bottom > 0 ? Insets.of(0, 0, 0, bottom) : Insets.NONE;
             }
             case SYSTEM_GESTURES:
-                return insets.getSystemGestureInsets();
+                return Api29Compat.getSystemGestureInsets(insets);
             case MANDATORY_SYSTEM_GESTURES:
-                return insets.getMandatorySystemGestureInsets();
+                return Api29Compat.getMandatorySystemGestureInsets(insets);
             case TAPPABLE_ELEMENT:
-                return insets.getTappableElementInsets();
+                return Api29Compat.getTappableElementInsets(insets);
             case DISPLAY_CUTOUT: {
                 DisplayCutout cutout = insets.getDisplayCutout();
                 if (cutout == null) return Insets.NONE;
@@ -323,7 +323,7 @@ public final class ApiCompat {
     public static WindowInsets getConsumedWindowInsets() {
         if (atLeastR()) return WindowInsets.CONSUMED;
         if (consumedWindowInsets == null) {
-            consumedWindowInsets = new WindowInsets.Builder().build()
+            consumedWindowInsets = new android.view.WindowInsets$Builder().build()
                     .consumeDisplayCutout().consumeStableInsets().consumeSystemWindowInsets();
         }
         return consumedWindowInsets;

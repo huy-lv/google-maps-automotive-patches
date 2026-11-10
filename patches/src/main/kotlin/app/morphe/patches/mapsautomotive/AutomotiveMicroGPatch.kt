@@ -72,7 +72,7 @@ private const val MAIN_ACTIVITY_NAME = "com.google.android.maps.MapsActivity"
 private const val APPLICATION_NAME = "com.google.android.apps.gmm.car.embedded.app.EmbeddedGoogleMapsApplication"
 internal const val APPLICATION_CLASS = "Lcom/google/android/apps/gmm/car/embedded/app/EmbeddedGoogleMapsApplication;"
 private const val INPUT_MIN_SDK = "30"
-private const val OUTPUT_MIN_SDK = "29"
+private const val OUTPUT_MIN_SDK = "28"
 private const val AUTOMOTIVE_FEATURE = "android.hardware.type.automotive"
 private const val GMS_VERSION_METADATA = "com.google.android.gms.version"
 private const val CRONET_METADATA_HOLDER = "android.net.http.MetaDataHolder"
@@ -126,7 +126,7 @@ internal val compatibility = Compatibility(
         AppTarget(
             version = null,
             isExperimental = false,
-            minSdk = 29,
+            minSdk = 28,
         ),
     ),
     // Metadata only: Desktop 1.19.0 does not filter patches by form factor; the manifest
@@ -185,6 +185,7 @@ val automotiveMicroGPatch = bytecodePatch(
         injectNavigationTtsWarmup()
         injectWindowRefresh()
         redirectApiModelOutlines()
+        guardApi29Outlines()
         replaceWindowBoundsCalls()
         replaceInstallSourceCalls()
         replaceCloseGuardCalls()
@@ -976,6 +977,7 @@ private fun BytecodePatchContext.injectExtensionContext() {
     method.addInstructionsWithLabels(
         0,
         """
+            invoke-static {}, Lapp/morphe/extension/mapsautomotive/patches/Api29Compat;->exemptHiddenApis()V
             invoke-static/range { p0 .. p0 }, $UTILS_CLASS->setContext(Landroid/content/Context;)V
             invoke-static/range { p0 .. p0 }, $CRASH_LOG_CLASS->setUncaughtExceptionHandler(Landroid/content/Context;)V
             invoke-static {}, $SAFE_MODE_CLASS->isReportProcess()Z

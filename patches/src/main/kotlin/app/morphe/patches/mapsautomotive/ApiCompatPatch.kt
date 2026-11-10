@@ -42,14 +42,19 @@ import java.util.logging.Logger
 // Car.createCar calls (DiLink 3 is not Android Automotive OS) and Maps' exit as the system user
 // on Android Automotive builds that run apps as user 0 (DiLink 5).
 
-private const val API_COMPAT_CLASS = "Lapp/morphe/extension/mapsautomotive/patches/ApiCompat;"
-private const val OUTLINE_CLASS_MARKER = "\$\$ExternalSyntheticApiModelOutline"
+internal const val API_COMPAT_CLASS = "Lapp/morphe/extension/mapsautomotive/patches/ApiCompat;"
+internal const val OUTLINE_CLASS_MARKER = "\$\$ExternalSyntheticApiModelOutline"
 private const val EXTENSION_PACKAGE = "Lapp/morphe/extension/"
 private val apiCompatLogger = Logger.getLogger("app.morphe.patches.mapsautomotive.ApiCompatPatch")
 
 // member: "Lowner;->name(params)return" or "Lowner;->name:type".
 // required: proven by an API 29 crash on the BYD head unit; the patch fails without it.
-private class ApiShim(val member: String, val compatName: String, val required: Boolean = false)
+internal class ApiShim(
+    val member: String,
+    val compatName: String,
+    val required: Boolean = false,
+    val compatClass: String = API_COMPAT_CLASS,
+)
 
 // Only members whose parameter and return types exist on API 29. Outlines that take or return
 // an API 30-only type (WindowMetrics, MediaRouter2, ApplicationExitInfo, ICU NumberFormatter,
@@ -157,17 +162,17 @@ internal fun memberKey(instruction: Instruction): String? =
 
 private fun isMapsCode(type: String) = OUTLINE_CLASS_MARKER !in type && !type.startsWith(EXTENSION_PACKAGE)
 
-private fun isMapsOutline(type: String) = OUTLINE_CLASS_MARKER in type && !type.startsWith(EXTENSION_PACKAGE)
+internal fun isMapsOutline(type: String) = OUTLINE_CLASS_MARKER in type && !type.startsWith(EXTENSION_PACKAGE)
 
 internal fun BytecodePatchContext.mutableMethodOf(method: Method) =
     mutableClassDefBy(method.definingClass).methods.single {
         it.name == method.name && it.returnType == method.returnType && it.parameterTypes == method.parameterTypes
     }
 
-private fun BytecodePatchContext.requireApiCompatMethods(references: Collection<MethodReference>) {
-    val compatClass = classDefByOrNull(API_COMPAT_CLASS)
-        ?: throw PatchException("Missing extension class $API_COMPAT_CLASS")
+internal fun BytecodePatchContext.requireApiCompatMethods(references: Collection<MethodReference>) {
     val missing = references.distinct().filter { reference ->
+        val compatClass = classDefByOrNull(reference.definingClass)
+            ?: throw PatchException("Missing extension class ${reference.definingClass}")
         compatClass.methods.none {
             it.name == reference.name && it.returnType == reference.returnType &&
                 it.parameterTypes.map { type -> type.toString() } == reference.parameterTypes.map { type -> type.toString() } &&
@@ -193,7 +198,8 @@ private fun staticCall(call: Instruction, reference: MethodReference): BuilderIn
 private class OutlineRedirect(val outline: Method, val shim: ApiShim, val compatReference: MethodReference)
 
 internal fun BytecodePatchContext.redirectApiModelOutlines() {
-    val shimsByMember = apiShims.associateBy { it.member }
+    val allShims = apiShims + api29Shims
+    val shimsByMember = allShims.associateBy { it.member }
     val redirects = mutableListOf<OutlineRedirect>()
 
     classDefForEach { classDef ->
@@ -225,7 +231,7 @@ internal fun BytecodePatchContext.redirectApiModelOutlines() {
     }
 
     val counts = redirects.groupingBy { it.shim }.eachCount()
-    apiShims.forEach { shim ->
+    allShims.forEach { shim ->
         val count = counts[shim] ?: 0
         if (count == 0 && shim.required) {
             throw PatchException("No API outline found for required member ${shim.member}")
@@ -266,7 +272,7 @@ private fun compatReferenceFor(method: Method, instructions: List<Instruction>, 
 
             val receiver = if (first.opcode in staticInvokeOpcodes) emptyList() else listOf(reference.definingClass)
             ImmutableMethodReference(
-                API_COMPAT_CLASS,
+                shim.compatClass,
                 shim.compatName,
                 receiver + reference.parameterTypes.map { it.toString() },
                 returnType,
@@ -282,7 +288,7 @@ private fun compatReferenceFor(method: Method, instructions: List<Instruction>, 
             ) {
                 unexpected()
             }
-            ImmutableMethodReference(API_COMPAT_CLASS, shim.compatName, emptyList(), reference.type)
+            ImmutableMethodReference(shim.compatClass, shim.compatName, emptyList(), reference.type)
         }
 
         else -> unexpected()
