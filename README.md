@@ -1,10 +1,10 @@
-# Google Maps Automotive for MicroG-RE on BYD cars
+# Google Maps Automotive for Lynk & Co cars (Android 9)
 
-Google Maps Automotive on a BYD DiLink 3 head unit (Android 10), or an Android 9 head unit, with [MicroG-RE 7.3.0](https://github.com/MorpheApp/MicroG-RE/releases/tag/7.3.0). The patched app, **Maps**, installs alongside phone Google Maps. This repository publishes `.mpp` bundles only; bring your own original APK.
+Lynk & Co head units (ecarx, for example the BX11A / IHU732P) run only Android 9 (API 28), and Google Maps for Android Automotive needs Android 10 or newer. This fork patches Google Maps Automotive so it runs on Android 9 with [MicroG-RE 7.3.0](https://github.com/MorpheApp/MicroG-RE/releases/tag/7.3.0): the package is renamed to `app.morphe.android.apps.maps.automotive` and its signature is spoofed as Google Maps' own for MicroG-RE, so the patched app, **Maps**, installs alongside phone Google Maps.
 
-[Test Files](https://tryy.cc/byd), PIN: 344993
+[Releases](https://github.com/huy-lv/google-maps-automotive-patches/releases) contain the `.mpp` bundle and a debug-signed APK for testing. For daily use, patch the original APK with the `.mpp` and your own key.
 
-![The patched Maps in split screen on a BYD Dolphin: route preview to Nakhon Ratchasima showing "Arrive with 29%", next to MicroG-RE 7.2.2](docs/gmaps-cars-byd.webp)
+Forked from [fangkampanat/google-maps-automotive-patches](https://github.com/fangkampanat/google-maps-automotive-patches), made for BYD DiLink 3 (Android 10). Its BYD features below still work only on BYD cars.
 
 ## Features
 
@@ -33,10 +33,10 @@ UI density, Driver side, Color scheme, BYD battery, Send to car and Updates are 
 
 ## Tested
 
-Tested on a BYD Dolphin (DiLink 3.0, Android 10) with MicroG-RE 7.3.0.
+Upstream is tested on a BYD Dolphin (DiLink 3.0, Android 10) with MicroG-RE 7.3.0.
 
 - Other BYD models, DiLink 5 and Android 11 or newer are untested.
-- Android 9 (API 28): the patch guards the Android 10 calls of Maps and backports `WindowInsets.Builder`; it starts and shows the Maps UI on an Android 9 emulator, untested on a head unit.
+- Lynk & Co / ecarx (Android 9, API 28): the patch guards the Android 10 calls of Maps and backports `WindowInsets.Builder`. ecarx's Android 9 `android.car` lacks the Android 10 car API, so below Android 10 Maps runs without the car service and the automotive feature is hidden from it. Maps starts on an Android 9 emulator; testing on the ecarx BX11A head unit is in progress.
 - On other BYD models, BYD battery starts off.
 - Plug-in hybrids are not supported.
 
@@ -44,7 +44,7 @@ Tested on a BYD Dolphin (DiLink 3.0, Android 10) with MicroG-RE 7.3.0.
 
 - [Morphe Desktop](https://github.com/MorpheApp/morphe-desktop) 2.1.0 or newer, with Java 21
 - The original **Google Maps (Android Automotive) 26.10.120003.E** APK (version code `1068833413`), for example from APKMirror. Other versions are untested.
-- An ARM64 BYD head unit with Android 9 or newer, 4 KiB memory pages and ADB access for one command during install
+- An ARM64 head unit with Android 9 or newer (Lynk & Co / ecarx, or BYD), 4 KiB memory pages and ADB access for one command during install
 
 ## Install
 
@@ -57,7 +57,7 @@ Tested on a BYD Dolphin (DiLink 3.0, Android 10) with MicroG-RE 7.3.0.
    adb shell dumpsys deviceidle whitelist +app.revanced.android.gms
    ```
 
-3. Turn OFF **MicroG RE** in BYD's **Disable Autostart**.
+3. BYD only: turn OFF **MicroG RE** in BYD's **Disable Autostart**.
 4. Open MicroG-RE, grant its permissions and sign in.
 5. For Send to car, turn on **Cloud messaging** and keep **Device registration** on.
 6. For voice guidance, install [Google TTS for MicroG-RE](https://github.com/fangkampanat/google-tts-microg) and download your voices.
@@ -67,7 +67,7 @@ Tested on a BYD Dolphin (DiLink 3.0, Android 10) with MicroG-RE 7.3.0.
 1. Add this repository as a **Remote** source and turn off other sources for Google Maps:
 
    ```text
-   https://github.com/fangkampanat/google-maps-automotive-patches
+   https://github.com/huy-lv/google-maps-automotive-patches
    ```
 
 2. Turn on **Settings › Advanced › Expert mode**.
@@ -78,14 +78,14 @@ Tested on a BYD Dolphin (DiLink 3.0, Android 10) with MicroG-RE 7.3.0.
 ### 3. Maps on the head unit
 
 1. Install the result and start **Maps**.
-2. For Send to car, turn OFF **Maps** in BYD's **Disable Autostart**. BYD turns it back on after each install or update.
+2. BYD only: for Send to car, turn OFF **Maps** in BYD's **Disable Autostart**. BYD turns it back on after each install or update.
 
 ## Reporting problems
 
 1. Open the red **Report Maps** icon and tap **Send**. If the app hangs on a grey screen, send the report before you restart the head unit.
 2. Tap **GitHub QR code** and scan it with your phone to open an issue with the report ID.
 
-Reports leave out your location, e-mail, VIN and push tokens, and are deleted after 14 days. If no report can be sent, attach the crash file from `/sdcard/Documents/Morphe/` to an [issue](https://github.com/fangkampanat/google-maps-automotive-patches/issues).
+Reports leave out your location, e-mail, VIN and push tokens, and are deleted after 14 days. If no report can be sent, attach the crash file from `/sdcard/Documents/Morphe/` to an [issue](https://github.com/huy-lv/google-maps-automotive-patches/issues).
 
 **Safe mode**: After two crashes within 10 minutes, the app starts with its extra features off. Turn them back on one at a time in Report Maps to find the one that crashes.
 
@@ -109,4 +109,4 @@ Eligible versions: Any version.
 
 ## Credits and license
 
-Built on [Morphe](https://github.com/MorpheApp) and [MicroG-RE](https://github.com/MorpheApp/MicroG-RE). The project is unofficial and not endorsed by Google, BYD or Morphe. Source code is licensed under [GPL-3.0](LICENSE); preserve [NOTICE](NOTICE). Build instructions: [docs/build-setup.md](docs/build-setup.md).
+Built on [Morphe](https://github.com/MorpheApp) and [MicroG-RE](https://github.com/MorpheApp/MicroG-RE). The project is unofficial and not endorsed by Google, BYD, Lynk & Co, ecarx or Morphe. Source code is licensed under [GPL-3.0](LICENSE); preserve [NOTICE](NOTICE). Build instructions: [docs/build-setup.md](docs/build-setup.md).
