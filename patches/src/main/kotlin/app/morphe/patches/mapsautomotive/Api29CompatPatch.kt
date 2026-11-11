@@ -340,3 +340,41 @@ internal fun BytecodePatchContext.replaceJobInfoBuildCalls() {
     }
     api29Logger.info("Redirected ${sites.size} JobInfo.Builder.build() calls")
 }
+
+// Android 9 head units such as ecarx's declare the automotive feature but ship an Android 9 android.car
+// without the API 29 Car API, so ApiCompat.canCreateCar makes Car.createCar return null there and Maps'
+// automotive paths, which need a Car, fail. Maps' feature checks go to Api29Compat.hasSystemFeature,
+// which hides the automotive feature below API 29, so Maps runs as on DiLink 3, which lacks it.
+private const val HAS_SYSTEM_FEATURE_MEMBER =
+    "Landroid/content/pm/PackageManager;->hasSystemFeature(Ljava/lang/String;)Z"
+private val hasSystemFeatureReference = ImmutableMethodReference(
+    API29_COMPAT_CLASS,
+    "hasSystemFeature",
+    listOf("Landroid/content/pm/PackageManager;", "Ljava/lang/String;"),
+    "Z",
+)
+
+internal fun BytecodePatchContext.replaceSystemFeatureCalls() {
+    requireApiCompatMethods(listOf(hasSystemFeatureReference))
+    val sites = mutableListOf<Pair<Method, Int>>()
+    classDefForEach { classDef ->
+        if (!isMapsCode(classDef.type)) return@classDefForEach
+        classDef.methods.forEach { method ->
+            method.implementation?.instructions?.forEachIndexed { index, instruction ->
+                if ((instruction.opcode == Opcode.INVOKE_VIRTUAL || instruction.opcode == Opcode.INVOKE_VIRTUAL_RANGE) &&
+                    (instruction as ReferenceInstruction).reference.toString() == HAS_SYSTEM_FEATURE_MEMBER
+                ) {
+                    sites += method to index
+                }
+            }
+        }
+    }
+    if (sites.isEmpty()) throw PatchException("Failed to find PackageManager.hasSystemFeature calls")
+    sites.groupBy({ it.first }, { it.second }).forEach { (original, indices) ->
+        val method = mutableMethodOf(original)
+        indices.forEach { index ->
+            method.replaceInstruction(index, staticCall(method.implementation!!.instructions[index], hasSystemFeatureReference))
+        }
+    }
+    api29Logger.info("Redirected ${sites.size} PackageManager.hasSystemFeature calls")
+}

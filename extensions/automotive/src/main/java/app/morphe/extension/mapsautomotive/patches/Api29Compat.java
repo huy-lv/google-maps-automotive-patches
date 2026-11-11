@@ -8,6 +8,7 @@ import android.app.job.JobInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -120,6 +121,15 @@ public final class Api29Compat {
         } catch (Throwable error) {
             throw new IllegalStateException("No WindowInsets.Builder", error);
         }
+    }
+
+    /**
+     * Maps' feature checks. Below API 29 the automotive feature is hidden: there android.car, where a
+     * head unit has it, lacks the API 29 Car API that Maps' automotive paths need.
+     */
+    public static boolean hasSystemFeature(PackageManager packageManager, String name) {
+        if (!atLeastQ() && PackageManager.FEATURE_AUTOMOTIVE.equals(name)) return false;
+        return packageManager.hasSystemFeature(name);
     }
 
     public static JobInfo buildJobInfo(JobInfo.Builder builder) {
