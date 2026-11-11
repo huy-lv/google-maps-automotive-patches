@@ -121,7 +121,9 @@ public final class ApiCompat {
         }
     }
 
-    // android.car exists on Android Automotive OS only; DiLink 3 is Android 10 without it.
+    // android.car exists on Android Automotive OS only; DiLink 3 is Android 10 without it. Some Android 9
+    // head units (ecarx) ship an Android 9 android.car without the API 29 Car.createCar(Context) and the
+    // car manager methods Maps uses, so there Maps runs without a car service, as on DiLink 3.
 
     /**
      * Whether Car.createCar can run. The patch sends Maps' Car.createCar calls through ApiCompat.createCar
@@ -134,7 +136,7 @@ public final class ApiCompat {
         if (available == null) {
             try {
                 Class.forName("android.car.Car", false, ApiCompat.class.getClassLoader());
-                available = true;
+                available = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;
             } catch (ClassNotFoundException | LinkageError error) {
                 available = false;
             }
@@ -151,7 +153,8 @@ public final class ApiCompat {
         synchronized (loggedCarCallers) {
             if (loggedCarCallers.size() >= 50 || !loggedCarCallers.add(caller)) return;
         }
-        ReportLog.w(TAG, "android.car is not available: Car.createCar returns null for " + caller);
+        ReportLog.w(TAG, "android.car is not available on SDK " + Build.VERSION.SDK_INT
+                + ": Car.createCar returns null for " + caller);
     }
 
     // Android Automotive runs apps in a user of their own; DiLink runs them as user 0.
